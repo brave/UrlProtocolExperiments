@@ -1,9 +1,11 @@
 #import "Adblock.h"
 #import <JavaScriptCore/JavaScriptCore.h>
+#import "NSURL+Matcher.h"
 
 @interface Adblock()
 @property (nonatomic, strong) JSContext* jscontext;
 @property (nonatomic, strong) JSManagedValue* funcShouldBlock;
+@property (atomic, strong) NSMutableSet* replacedUrls;
 
 @end
 
@@ -45,6 +47,8 @@
 - (instancetype)init
 {
   if (self = [super init]) {
+    self.replacedUrls = [NSMutableSet set];
+
     self.jscontext = [[JSContext alloc] init];
 
     [self loadJS:@"polyfills.js"];
@@ -96,14 +100,20 @@ int callcount = 0;
     BOOL block = [val toBool];
     if (block) {
    //   NSLog(@"block");
+      [self.replacedUrls addObject:request.URL];
     }
 
     callcount++;
-    NSLog(@"%d", callcount);
+    //NSLog(@"%d", callcount);
 
     cachedResults[url] = [NSNumber numberWithBool:block];
     return block;
   }
+}
+
+- (NSURL*)getOriginalFor:(NSURL*)url
+{
+  return [url hasString:@"tpc.googlesyndication.com/simgad"]? url : nil;
 }
 
 @end

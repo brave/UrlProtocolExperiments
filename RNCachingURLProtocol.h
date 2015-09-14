@@ -61,5 +61,8 @@
 #import <Foundation/Foundation.h>
 
 @interface RNCachingURLProtocol : NSURLProtocol
-
+@property BOOL foundHtmlInStream;
++ (NSSet*)supportedSchemes;
 @end
+
+static NSString *RNCachingURLHeader = @"X-RNCache";

@@ -12,5 +12,6 @@
 
 + (instancetype)singleton;
 - (BOOL)shouldBlock:(NSURLRequest*)request;
+- (NSURL*)getOriginalFor:(NSURL*)url;
 
 @end

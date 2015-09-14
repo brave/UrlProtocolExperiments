@@ -29,6 +29,10 @@
 #import "Reachability.h"
 #import "NSString+Sha1.h"
 #import "Adblock.h"
+#import "NSURL+Matcher.h"
+#import "URLProtocol+InjectJS.h"
+#import "URLProtocol+ShouldHandle.h"
+
 #define WORKAROUND_MUTABLE_COPY_LEAK 1
 
 #if WORKAROUND_MUTABLE_COPY_LEAK
@@ -46,23 +50,18 @@
 @property (nonatomic, readwrite, strong) NSURLRequest *redirectRequest;
 @end
 
-static NSString *RNCachingURLHeader = @"X-RNCache";
-
 @interface RNCachingURLProtocol () // <NSURLConnectionDelegate, NSURLConnectionDataDelegate> iOS5-only
 @property (nonatomic, readwrite, strong) NSURLConnection *connection;
 @property (nonatomic, readwrite, strong) NSMutableData *data;
 @property (nonatomic, readwrite, strong) NSURLResponse *response;
 - (void)appendData:(NSData *)newData;
-@property BOOL foundHTML;
+
 @end
 
-static NSObject *RNCachingSupportedSchemesMonitor;
+static NSObject* RNCachingSupportedSchemesMonitor;
 static NSSet *RNCachingSupportedSchemes;
 
 @implementation RNCachingURLProtocol
-@synthesize connection = connection_;
-@synthesize data = data_;
-@synthesize response = response_;
 
 + (void)initialize
 {
@@ -79,18 +78,7 @@ static NSSet *RNCachingSupportedSchemes;
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
 {
-
-  // only handle http requests we haven't marked with our header.
-  if ([[self supportedSchemes] containsObject:request.URL.scheme] &&
-      ([request valueForHTTPHeaderField:RNCachingURLHeader] == nil))
-  {
-    //NSLog(@"%d canon %@", [NSThread isMainThread], request.URL.absoluteString);
-
-    Adblock* ad = [Adblock singleton];
-
-    return [ad shouldBlock:request];
-  }
-  return NO;
+  return [RNCachingURLProtocol shouldHandleRequest:request];
 }
 
 + (NSURLRequest *)canonicalRequestForRequest:(NSURLRequest *)request
@@ -125,8 +113,7 @@ UIImage* imageWithColor(UIColor *color) {
 -(void)responseImage
 {
   UIImage* image = imageWithColor([UIColor purpleColor]);
-  //NSLog(@"startLoading %@", self.request.URL.absoluteString);
-  //    NSString* div = [NSString stringWithFormat:@"<div id=\"1234\" data-blocked=\"%@\">a div</div>", self.request.URL.absoluteString]; [div dataUsingEncoding:NSUTF8StringEncoding]
+
   NSData* data = UIImageJPEGRepresentation(image, 0.4);
   NSURLResponse* response = [[NSURLResponse alloc] initWithURL:self.request.URL
                                                       MIMEType:@"image/jpeg"
@@ -157,24 +144,21 @@ UIImage* imageWithColor(UIColor *color) {
 
   NSURLComponents *urlComponents = [[NSURLComponents alloc] initWithURL:self.request.URL resolvingAgainstBaseURL:NO];
   urlComponents.query = nil; // Strip out query parameters.
-
- // NSLog(@"protocol startLoading ∆∆∆ %@ req:%@", self.request.allHTTPHeaderFields, urlComponents.string);
-
-//  if ([self.request.URL.absoluteString rangeOfString:@"pubads"].location != NSNotFound && ![self.request.URL.absoluteString hasSuffix:@"html"]) {
-//     [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil]];
-//      return;
+  NSLog(@"protocol startLoading ∆∆∆ %@ req:%@", self.request.allHTTPHeaderFields, urlComponents.string);
+//
+////  if ([self.request.URL.absoluteString rangeOfString:@"pubads"].location != NSNotFound && ![self.request.URL.absoluteString hasSuffix:@"html"]) {
+////     [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil]];
+////      return;
+////  }
+//  if ([self.request.URL.absoluteString rangeOfString:@"googles"].location != NSNotFound && ![self.request.URL.absoluteString hasSuffix:@"html"]) {
+//   // [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil]];
+//
+//
+//    return;
 //  }
-  if ([self.request.URL.absoluteString rangeOfString:@"googles"].location != NSNotFound && ![self.request.URL.absoluteString hasSuffix:@"html"]) {
-   // [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil]];
 
-
-    return;
-  }
-
-  [self responseImage];
-
-  if (![self useCache]) {
-    NSMutableURLRequest *connectionRequest = 
+//  if (![self useCache]) {
+    NSMutableURLRequest *connectionRequest =
 #if WORKAROUND_MUTABLE_COPY_LEAK
       [[self request] mutableCopyWorkaround];
 #else
@@ -185,26 +169,29 @@ UIImage* imageWithColor(UIColor *color) {
     NSURLConnection *connection = [NSURLConnection connectionWithRequest:connectionRequest
                                                                 delegate:self];
     [self setConnection:connection];
-  }
-  else {
-    RNCachedData *cache = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cachePathForRequest:[self request]]];
-    if (cache) {
-      NSData *data = [cache data];
-      NSURLResponse *response = [cache response];
-      NSURLRequest *redirectRequest = [cache redirectRequest];
-      if (redirectRequest) {
-        [[self client] URLProtocol:self wasRedirectedToRequest:redirectRequest redirectResponse:response];
-      } else {
-          
-        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed]; // we handle caching ourselves.
-        [[self client] URLProtocol:self didLoadData:data];
-        [[self client] URLProtocolDidFinishLoading:self];
-      }
-    }
-    else {
-      [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCannotConnectToHost userInfo:nil]];
-    }
-  }
+
+    [self responseImage];
+
+//  }
+//  else {
+//    RNCachedData *cache = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cachePathForRequest:[self request]]];
+//    if (cache) {
+//      NSData *data = [cache data];
+//      NSURLResponse *response = [cache response];
+//      NSURLRequest *redirectRequest = [cache redirectRequest];
+//      if (redirectRequest) {
+//        [[self client] URLProtocol:self wasRedirectedToRequest:redirectRequest redirectResponse:response];
+//      } else {
+//          
+//        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed]; // we handle caching ourselves.
+//        [[self client] URLProtocol:self didLoadData:data];
+//        [[self client] URLProtocolDidFinishLoading:self];
+//      }
+//    }
+//    else {
+//      [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCannotConnectToHost userInfo:nil]];
+//    }
+//  }
 }
 
 - (void)stopLoading
@@ -244,16 +231,9 @@ UIImage* imageWithColor(UIColor *color) {
   }
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
+- (void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
 {
-  if ([self.request.URL.absoluteString hasSuffix:@"html"]) {
-    NSString* str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    if (str)  {
-      if ([str rangeOfString:@"<html>" options:NSCaseInsensitiveSearch].location != NSNotFound) {
-        self.foundHTML = true;
-      }
-    }
-  }
+  data = [self injectIntoStreamForUrl:self.request.URL withData:data];
 
   [[self client] URLProtocol:self didLoadData:data];
   [self appendData:data];
@@ -304,8 +284,9 @@ UIImage* imageWithColor(UIColor *color) {
   }
 }
 
-+ (NSSet *)supportedSchemes {
-  NSSet *supportedSchemes;
++ (NSSet*)supportedSchemes
+{
+  NSSet* supportedSchemes;
   @synchronized(RNCachingSupportedSchemesMonitor)
   {
     supportedSchemes = RNCachingSupportedSchemes;
