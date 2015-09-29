@@ -12,6 +12,6 @@
 
 + (instancetype)singleton;
 - (BOOL)shouldBlock:(NSURLRequest*)request;
-- (NSURL*)getOriginalFor:(NSURL*)url;
-
+- (NSString*)getBlockedAsString;
+- (BOOL)isAlreadyBlockedUrl:(NSURL*)url;
 @end

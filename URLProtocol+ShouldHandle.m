@@ -6,30 +6,20 @@
 
 +(BOOL)shouldHandleRequest:(NSURLRequest*)request
 {
-  NSURLComponents* urlComponents = [[NSURLComponents alloc] initWithURL:request.URL resolvingAgainstBaseURL:NO];
-  urlComponents.query = nil; // Strip out query parameters.
-
+  //NSLog(@"%@ ••• Accept: %@, Referrer: %@", request.URL, request.allHTTPHeaderFields[@"Accept"], request.allHTTPHeaderFields[@"Referer"]);
   // replace this style tpc.googlesyndication.com/simgad/15067328871183717387
-
-
   BOOL isImage = [request.URL hasString:@"tpc.googlesyndication.com/simgad"];
 
-  ////     [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil]];
-  ////      return;
-  ////  }
-  //  if ([self.request.URL.absoluteString rangeOfString:@"googles"].location != NSNotFound && ![self.request.URL.absoluteString hasSuffix:@"html"]) {
-  //   // [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil]];
-  //
-  //
-  //    return;
-  //  }
 
   // only handle http requests we haven't marked with our header.
   if ([[self supportedSchemes] containsObject:request.URL.scheme] &&
-      ([request valueForHTTPHeaderField:RNCachingURLHeader] == nil) && isImage)
+      ([request valueForHTTPHeaderField:RNCachingURLHeader] == nil))
   {
-    Adblock* ad = [Adblock singleton];
-    return [ad shouldBlock:request];
+//    if (isImage) {
+//      Adblock* ad = [Adblock singleton];
+//      return [ad shouldBlock:request];
+//    }
+    return YES; //[request.URL hasSuffix:@"html"] ;
   }
 
   return NO;

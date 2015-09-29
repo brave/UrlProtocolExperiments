@@ -31,6 +31,7 @@
 
 @interface ViewController()<UIWebViewDelegate>
 @property (atomic) int counter;
+@property (nonatomic, strong) NSString* loaded;
 @end
 
 @implementation ViewController
@@ -39,7 +40,14 @@
 - (void)viewDidLoad
 {
   [super viewDidLoad];
-  [self.webView loadRequest:[[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"https://nytimes.com"]]];
+ // [self.webView loadRequest:[[NSURLRequest alloc] initWithURL:[NSURL URLWithString:]]];
+  [self.webView loadRequest:[[NSURLRequest alloc] initWithURL:[NSURL URLWithString:
+                                                               @"https://nytimes.com"
+//                                                               @"https://garvankeeley.github.io/web/adrepl.html"
+//@"http://safeframes.net/examples/IAB_RisingStars/sidekick_sample.html"
+                                                               ]]];
+
+  //[self.webView loadRequest:[[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"http://publisherconsole.appspot.com/safeframe/creative-preview.html"]]];
   self.webView.delegate = self;
 }
 bool ok = YES;
@@ -51,7 +59,7 @@ bool ok = YES;
 //  if (!ok) return NO;
 //  if ([request.URL.absoluteString rangeOfString:@"blank"].location == NSNotFound) {
 //    //NSLog(@"%@ is main %d", [NSThread currentThread], [NSThread isMainThread]);
-//    NSLog(@"^^^ shouldStartLoadWithRequest: %@ %@", request.URL.absoluteString, request.mainDocumentURL.absoluteString);
+   //NSLog(@"^^^ shouldStartLoadWithRequest: %@ %@", request.URL.absoluteString, request.mainDocumentURL.absoluteString);
 //    NSMutableURLRequest* mr = (NSMutableURLRequest*)request;
 //      [mr setValue:@"funky" forHTTPHeaderField:@"monkey"];}
   return YES;
@@ -79,26 +87,43 @@ bool ok = YES;
 {
   //NSLog(@"did finish");
   self.counter--;
-
+return; //++++++++++++++++++++++++++
 //  NSLog(@"••• %d, Frame %@ ", self.counter, webView.request.URL);
 
-  NSString* js = @"var divs = document.getElementsByTagName(\"DIV\");"
-                  "var elems = [];"
-                  ""
-                  "for(var i = 0; i < divs.length; i++) {"
-                  "  var div = divs[i];"
-                  "  var vis = div.style.visibility;"
-                  ""
-                  "  if(vis == 'block' || vis == 'inline')"
-                  "    elems.push(div);"
-                  "}";
  // js = [webView stringByEvaluatingJavaScriptFromString:@"document.images[0].src"];
+  NSString* ss = [webView stringByEvaluatingJavaScriptFromString:@"document.documentElement.outerHTML"];
+ // NSLog(@"%@", ss);
+ // assert([ss rangeOfString:@"i.ytimg.com"].location != NSNotFound);
+  if (self.counter < 1 && ![webView.request.URL.absoluteString isEqualToString:self.loaded]) {
+    self.loaded = webView.request.URL.absoluteString;
+    ss = [ss stringByReplacingOccurrencesOfString:@" the " withString:@" ZZZ "];
+    //NSLog(@"%@",ss);
+    //[webView loadHTMLString:ss baseURL:webView.request.URL];
+   // NSLog(@"replacing");
+    [self performSelector:@selector(installJS) withObject:nil afterDelay:1.0];
+  } else {
+  //  NSLog(@"not replacing %d", self.counter);
+  }
 }
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
 {
 
 }
+
+
+- (void)installJS
+{
+  NSArray *frames = [self.webView valueForKeyPath:@"documentView.webView.mainFrame.childFrames"];
+
+  [frames enumerateObjectsUsingBlock:^(id frame, NSUInteger idx, BOOL *stop) {
+    JSContext *context = [frame valueForKeyPath:@"javaScriptContext"];
+    context[@"Window"][@"prototype"][@"alert"] = ^(NSString *message) {
+      NSLog(@"%@", message);
+    };
+  }];
+}
+
 
 
 @end

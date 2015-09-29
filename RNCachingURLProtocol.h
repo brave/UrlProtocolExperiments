@@ -61,8 +61,24 @@
 #import <Foundation/Foundation.h>
 
 @interface RNCachingURLProtocol : NSURLProtocol
+
 @property BOOL foundHtmlInStream;
+@property long bytesRead;
+
 + (NSSet*)supportedSchemes;
+
+typedef NS_ENUM(NSInteger, InjectionResult) {
+  isUnset,
+  isText,
+  isTextAndJsInjected,
+  isBinary,
+  isIgnored
+};
+@property InjectionResult injectionResult;
+
+@property (nonatomic, readwrite, strong) NSURLResponse *response;
+
+
 @end
 
 static NSString *RNCachingURLHeader = @"X-RNCache";

@@ -53,7 +53,6 @@
 @interface RNCachingURLProtocol () // <NSURLConnectionDelegate, NSURLConnectionDataDelegate> iOS5-only
 @property (nonatomic, readwrite, strong) NSURLConnection *connection;
 @property (nonatomic, readwrite, strong) NSMutableData *data;
-@property (nonatomic, readwrite, strong) NSURLResponse *response;
 - (void)appendData:(NSData *)newData;
 
 @end
@@ -95,35 +94,6 @@ static NSSet *RNCachingSupportedSchemes;
   return [cachesPath stringByAppendingPathComponent:fileName];
 }
 
-UIImage* imageWithColor(UIColor *color) {
-  CGRect rect = CGRectMake(0.0f, 0.0f, 1.0f, 1.0f);
-  UIGraphicsBeginImageContext(rect.size);
-  CGContextRef context = UIGraphicsGetCurrentContext();
-
-  CGContextSetFillColorWithColor(context, [color CGColor]);
-  CGContextFillRect(context, rect);
-
-  UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-  UIGraphicsEndImageContext();
-
-  return image;
-}
-
-
--(void)responseImage
-{
-  UIImage* image = imageWithColor([UIColor purpleColor]);
-
-  NSData* data = UIImageJPEGRepresentation(image, 0.4);
-  NSURLResponse* response = [[NSURLResponse alloc] initWithURL:self.request.URL
-                                                      MIMEType:@"image/jpeg"
-                                         expectedContentLength:data.length
-                                              textEncodingName:nil];
-  [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed]; // we handle caching ourselves.
-  [[self client] URLProtocol:self didLoadData:data];
-  [[self client] URLProtocolDidFinishLoading:self];
-}
-
 -(void)responseHtml
 {
  // NSLog(@"startLoading %@", self.request.URL.absoluteString);
@@ -142,10 +112,10 @@ UIImage* imageWithColor(UIColor *color) {
 - (void)startLoading
 {
 
-  NSURLComponents *urlComponents = [[NSURLComponents alloc] initWithURL:self.request.URL resolvingAgainstBaseURL:NO];
-  urlComponents.query = nil; // Strip out query parameters.
-  NSLog(@"protocol startLoading ∆∆∆ %@ req:%@", self.request.allHTTPHeaderFields, urlComponents.string);
-//
+  {
+   // NSURLComponents *urlComponents = [[NSURLComponents alloc] initWithURL:self.request.URL resolvingAgainstBaseURL:NO]; urlComponents.query = nil; NSLog(@"protocol startLoading ∆∆∆ %@ req:%@", self.request.allHTTPHeaderFields, urlComponents.string);
+  }
+  //
 ////  if ([self.request.URL.absoluteString rangeOfString:@"pubads"].location != NSNotFound && ![self.request.URL.absoluteString hasSuffix:@"html"]) {
 ////     [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil]];
 ////      return;
@@ -157,7 +127,7 @@ UIImage* imageWithColor(UIColor *color) {
 //    return;
 //  }
 
-//  if (![self useCache]) {
+  if (![self useCache]) {
     NSMutableURLRequest *connectionRequest =
 #if WORKAROUND_MUTABLE_COPY_LEAK
       [[self request] mutableCopyWorkaround];
@@ -168,30 +138,27 @@ UIImage* imageWithColor(UIColor *color) {
     [connectionRequest setValue:@"" forHTTPHeaderField:RNCachingURLHeader];
     NSURLConnection *connection = [NSURLConnection connectionWithRequest:connectionRequest
                                                                 delegate:self];
-    [self setConnection:connection];
-
-    [self responseImage];
-
-//  }
-//  else {
-//    RNCachedData *cache = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cachePathForRequest:[self request]]];
-//    if (cache) {
-//      NSData *data = [cache data];
-//      NSURLResponse *response = [cache response];
-//      NSURLRequest *redirectRequest = [cache redirectRequest];
-//      if (redirectRequest) {
-//        [[self client] URLProtocol:self wasRedirectedToRequest:redirectRequest redirectResponse:response];
-//      } else {
-//          
-//        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed]; // we handle caching ourselves.
-//        [[self client] URLProtocol:self didLoadData:data];
-//        [[self client] URLProtocolDidFinishLoading:self];
-//      }
-//    }
-//    else {
-//      [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCannotConnectToHost userInfo:nil]];
-//    }
-//  }
+    self.connection = connection;
+  }
+  else {
+    RNCachedData *cache = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cachePathForRequest:[self request]]];
+    if (cache) {
+      NSData *data = [cache data];
+      NSURLResponse *response = [cache response];
+      NSURLRequest *redirectRequest = [cache redirectRequest];
+      if (redirectRequest) {
+        [[self client] URLProtocol:self wasRedirectedToRequest:redirectRequest redirectResponse:response];
+      } else {
+          
+        [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed]; // we handle caching ourselves.
+        [[self client] URLProtocol:self didLoadData:data];
+        [[self client] URLProtocolDidFinishLoading:self];
+      }
+    }
+    else {
+      [[self client] URLProtocol:self didFailWithError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCannotConnectToHost userInfo:nil]];
+    }
+  }
 }
 
 - (void)stopLoading
@@ -233,7 +200,9 @@ UIImage* imageWithColor(UIColor *color) {
 
 - (void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)data
 {
-  data = [self injectIntoStreamForUrl:self.request.URL withData:data];
+  data = [self injectIntoConnection:connection
+                         forUrl:self.request.URL
+                           withData:data];
 
   [[self client] URLProtocol:self didLoadData:data];
   [self appendData:data];
@@ -249,6 +218,10 @@ UIImage* imageWithColor(UIColor *color) {
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
+  if ([self.request.URL.absoluteString rangeOfString:@"goog"].location != NSNotFound) {
+    NSLog(@"%@", response);
+  }
+
   [self setResponse:response];
   [[self client] URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];  // We cache ourselves.
 }

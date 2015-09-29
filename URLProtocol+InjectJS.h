@@ -2,7 +2,9 @@
 
 @interface RNCachingURLProtocol (InjectJS)
 
-- (NSData*)injectIntoStreamForUrl:(NSURL*)url withData:(NSData*)data;
+- (NSData*)injectIntoConnection:(NSURLConnection*)connection
+                         forUrl:(NSURL*)url
+                       withData:(NSData*)data;
 
 
 @end

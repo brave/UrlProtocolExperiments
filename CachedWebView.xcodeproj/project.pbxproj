@@ -11,6 +11,9 @@
 		EB5CC7CB1BA314F4004A4ACB /* Adblock.m in Sources */ = {isa = PBXBuildFile; fileRef = EB5CC7CA1BA314F4004A4ACB /* Adblock.m */; };
 		EB5CC7CF1BA318E7004A4ACB /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB5CC7CE1BA318E7004A4ACB /* JavaScriptCore.framework */; };
 		EBB3C1121BA360BB004D7B4F /* adblock-resources in Resources */ = {isa = PBXBuildFile; fileRef = EBB3C10E1BA36092004D7B4F /* adblock-resources */; };
+		EBB3C1151BA718B4004D7B4F /* NSURL+Matcher.m in Sources */ = {isa = PBXBuildFile; fileRef = EBB3C1141BA718B4004D7B4F /* NSURL+Matcher.m */; };
+		EBB3C1181BA71B56004D7B4F /* URLProtocol+InjectJS.m in Sources */ = {isa = PBXBuildFile; fileRef = EBB3C1171BA71B56004D7B4F /* URLProtocol+InjectJS.m */; };
+		EBB3C11B1BA72418004D7B4F /* URLProtocol+ShouldHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = EBB3C11A1BA72418004D7B4F /* URLProtocol+ShouldHandle.m */; };
 		FB237ECE14D5B86100F30AD8 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB237ECD14D5B86100F30AD8 /* UIKit.framework */; };
 		FB237ED014D5B86100F30AD8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB237ECF14D5B86100F30AD8 /* Foundation.framework */; };
 		FB237ED214D5B86100F30AD8 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB237ED114D5B86100F30AD8 /* CoreGraphics.framework */; };
@@ -32,6 +35,12 @@
 		EB5CC7CE1BA318E7004A4ACB /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		EBB3C10E1BA36092004D7B4F /* adblock-resources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "adblock-resources"; sourceTree = "<group>"; };
 		EBB3C1101BA360AE004D7B4F /* abp-ios-wrapper.js.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = "abp-ios-wrapper.js.txt"; path = "adblock-resources/abp-ios-wrapper.js.txt"; sourceTree = "<group>"; };
+		EBB3C1131BA718B4004D7B4F /* NSURL+Matcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+Matcher.h"; sourceTree = "<group>"; };
+		EBB3C1141BA718B4004D7B4F /* NSURL+Matcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+Matcher.m"; sourceTree = "<group>"; };
+		EBB3C1161BA71B56004D7B4F /* URLProtocol+InjectJS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "URLProtocol+InjectJS.h"; sourceTree = "<group>"; };
+		EBB3C1171BA71B56004D7B4F /* URLProtocol+InjectJS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "URLProtocol+InjectJS.m"; sourceTree = "<group>"; };
+		EBB3C1191BA72418004D7B4F /* URLProtocol+ShouldHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "URLProtocol+ShouldHandle.h"; sourceTree = "<group>"; };
+		EBB3C11A1BA72418004D7B4F /* URLProtocol+ShouldHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "URLProtocol+ShouldHandle.m"; sourceTree = "<group>"; };
 		FB237EC914D5B86100F30AD8 /* CachedWebView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CachedWebView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB237ECD14D5B86100F30AD8 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		FB237ECF14D5B86100F30AD8 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -71,6 +80,12 @@
 		FB237EBE14D5B86100F30AD8 = {
 			isa = PBXGroup;
 			children = (
+				EBB3C1191BA72418004D7B4F /* URLProtocol+ShouldHandle.h */,
+				EBB3C11A1BA72418004D7B4F /* URLProtocol+ShouldHandle.m */,
+				EBB3C1161BA71B56004D7B4F /* URLProtocol+InjectJS.h */,
+				EBB3C1171BA71B56004D7B4F /* URLProtocol+InjectJS.m */,
+				EBB3C1131BA718B4004D7B4F /* NSURL+Matcher.h */,
+				EBB3C1141BA718B4004D7B4F /* NSURL+Matcher.m */,
 				EBB3C1101BA360AE004D7B4F /* abp-ios-wrapper.js.txt */,
 				EBB3C10E1BA36092004D7B4F /* adblock-resources */,
 				C800AAE6166E77B20027E1E5 /* NSString+Sha1.h */,
@@ -195,11 +210,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB39D07F14D5BB09002A6D19 /* RNCachingURLProtocol.m in Sources */,
+				EBB3C1181BA71B56004D7B4F /* URLProtocol+InjectJS.m in Sources */,
 				FB39D08014D5BB09002A6D19 /* Reachability.m in Sources */,
 				FB237EDA14D5B86100F30AD8 /* main.m in Sources */,
 				EB5CC7CB1BA314F4004A4ACB /* Adblock.m in Sources */,
 				FB237EDE14D5B86100F30AD8 /* AppDelegate.m in Sources */,
+				EBB3C1151BA718B4004D7B4F /* NSURL+Matcher.m in Sources */,
 				FB237EE114D5B86100F30AD8 /* ViewController.m in Sources */,
+				EBB3C11B1BA72418004D7B4F /* URLProtocol+ShouldHandle.m in Sources */,
 				C800AAE8166E77B20027E1E5 /* NSString+Sha1.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

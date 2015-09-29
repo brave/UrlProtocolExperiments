@@ -111,9 +111,29 @@ int callcount = 0;
   }
 }
 
-- (NSURL*)getOriginalFor:(NSURL*)url
+- (NSString*)getBlockedAsString
 {
-  return [url hasString:@"tpc.googlesyndication.com/simgad"]? url : nil;
+  if (self.replacedUrls.count < 1)
+    return @"[]";
+
+  NSMutableString* result = [NSMutableString stringWithString:@"["];
+  for (NSURL* url in self.replacedUrls) {
+    [result appendFormat:@"'%@',", url.absoluteString];
+  }
+  [result deleteCharactersInRange:NSMakeRange(result.length - 1, 1)];
+  [result appendString:@"]"];
+  return result;
+}
+
+
+- (BOOL)isAlreadyBlockedUrl:(NSURL*)url
+{
+  for (NSURL* replaced in self.replacedUrls) {
+    if ([replaced.absoluteString isEqualToString:url.absoluteString]) {
+      return true;
+    }
+  }
+  return false;
 }
 
 @end
