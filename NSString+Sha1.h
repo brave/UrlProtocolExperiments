@@ -1,6 +1,4 @@
-
 #import <Foundation/Foundation.h>
-#import <CommonCrypto/CommonDigest.h>
 
 /**
  * This extension contains several a helper
@@ -13,7 +11,6 @@
  *
  * @return NSString
  */
-- (NSString *)sha1;
-
+- (NSString*)sha1;
 
 @end

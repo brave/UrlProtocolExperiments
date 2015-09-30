@@ -109,10 +109,11 @@ return; //++++++++++++++++++++++++++
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
 {
 
+
 }
 
 
-- (void)installJS
+- (void)installJSHookOnChildFrames
 {
   NSArray *frames = [self.webView valueForKeyPath:@"documentView.webView.mainFrame.childFrames"];
 
